@@ -1,17 +1,12 @@
 {
   "manifest_version": 2,
   "name": "Crunchyroll Random Anime Button",
-  "version": "1.0.0",
-  "description": "Adds a 'Random Anime' button to the Crunchyroll header, allowing users to discover random anime with a single click.",
+  "version": "1.0",
+  "description": "Adds a Random Anime button next to the search bar on Crunchyroll",
   "author": "Noahbds",
   "permissions": [
     "activeTab"
   ],
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
   "content_scripts": [
     {
       "matches": [
@@ -21,21 +16,13 @@
       "run_at": "document_end"
     }
   ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "browser_action": {
     "default_icon": "icons/icon16.png",
-    "default_title": "Crunchyroll Random Anime Button"
-  },
-  "background": {
-    "scripts": ["background.js"],
-    "persistent": false
-  },
-  "homepage_url": "https://github.com/Noahbds/crunchyroll-random-anime-button",
-  "support_url": "https://github.com/Noahbds/crunchyroll-random-anime-button/issues",
-  "license": "MIT",
-  "manifest_version": 2,
-  "applications": {
-    "gecko": {
-      "id": "crunchyroll-random-anime-button@noahbds"
-    }
+    "default_popup": "popup.html"
   }
 }
