@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Crunchyroll Random Anime Button",
-  "version": "1.0",
+  "version": "1.2",
   "description": "Adds a Random Anime button next to the search bar on Crunchyroll",
   "author": "Noahbds",
   "permissions": [
