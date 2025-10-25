@@ -1,52 +1,99 @@
-(function() {
-    'use strict';
+(function () {
+  "use strict";
 
-    const iconUrl = 'https://github.com/noahbds/crunchyroll-random-anime/blob/main/icons/randomimg.png?raw=true';
+  const iconUrl =
+    typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.getURL
+      ? chrome.runtime.getURL("icons/randomimg.png")
+      : "https://github.com/noahbds/crunchyroll-random-anime/blob/main/icons/randomimg.png?raw=true";
 
-    function createRandomAnimeButton() {
-        const headerActions = document.querySelector('ul.erc-user-actions');
-        if (!headerActions) return;
+  function createRandomAnimeButton() {
+    if (document.querySelector(".erc-random-header-button")) return;
 
-        const randomButtonLi = document.createElement('li');
-        randomButtonLi.className = 'user-actions-item';
+    const searchButton = document.querySelector(
+      'a.erc-search-header-button-old, a[aria-label="Search"]'
+    );
 
-        const randomButton = document.createElement('a');
-        randomButton.href = 'https://www.crunchyroll.com/fr/random/anime?random_ref=topbar';
-        randomButton.className = 'erc-header-tile state-icon-only erc-random-header-button';
-        randomButton.tabIndex = 0;
-        randomButton.dataset.t = 'header-tile';
+    let actionsContainer = null;
+    let insertBeforeNode = null;
 
-        const buttonDiv = document.createElement('div');
-        buttonDiv.className = 'erc-header-svg';
-
-        const buttonIcon = document.createElement('img');
-        buttonIcon.src = iconUrl;
-        buttonIcon.alt = 'Random Anime Icon';
-        buttonIcon.style.cssText = 'width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;';
-
-        const buttonText = document.createElement('span');
-        buttonText.className = 'text--gq6o- text--is-l--iccTo';
-        buttonText.textContent = 'Random Anime';
-
-        buttonDiv.appendChild(buttonIcon);
-        randomButton.appendChild(buttonDiv);
-        randomButton.appendChild(buttonText);
-        randomButtonLi.appendChild(randomButton);
-
-        const searchButton = document.querySelector('.erc-search-header-button-old');
-        if (searchButton) {
-            headerActions.insertBefore(randomButtonLi, searchButton.parentNode);
-        } else {
-            headerActions.appendChild(randomButtonLi);
-        }
+    if (searchButton) {
+      const searchWrapper = searchButton.closest(
+        "div.nav-horizontal-layout__action-item--KZBne, div"
+      );
+      insertBeforeNode =
+        searchWrapper || searchButton.parentElement || searchButton;
+      actionsContainer = insertBeforeNode && insertBeforeNode.parentElement;
     }
 
-    const observer = new MutationObserver(() => {
-        if (document.querySelector('ul.erc-user-actions')) {
-            createRandomAnimeButton();
-            observer.disconnect();
-        }
-    });
+    if (!actionsContainer) {
+      actionsContainer = document.querySelector(
+        "div.nav-horizontal-layout__actions, div.nav-horizontal-layout__action-items, header"
+      );
+    }
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    if (!actionsContainer) {
+      const anyAction = document.querySelector(
+        'a.erc-header-tile, div.erc-header-svg, a[role="button"][data-t="header-tile"]'
+      );
+      actionsContainer = anyAction && anyAction.parentElement;
+    }
+
+    if (!actionsContainer) return;
+
+    const actionWrapper = document.createElement("div");
+    actionWrapper.className = "nav-horizontal-layout__action-item--KZBne";
+
+    const randomButton = document.createElement("a");
+    randomButton.href =
+      "https://www.crunchyroll.com/fr/random/anime?random_ref=topbar";
+    randomButton.className =
+      "erc-header-tile state-icon-only erc-random-header-button";
+    randomButton.tabIndex = 0;
+    randomButton.setAttribute("data-t", "header-tile");
+    randomButton.setAttribute("aria-label", "Random Anime");
+
+    const buttonDiv = document.createElement("div");
+    buttonDiv.className = "erc-header-svg";
+
+    const buttonIcon = document.createElement("img");
+    buttonIcon.src = iconUrl;
+    buttonIcon.alt = "Random Anime";
+    buttonIcon.style.cssText =
+      "width: 24px; height: 24px; display: inline-block; vertical-align: middle;";
+
+    const buttonText = document.createElement("span");
+    buttonText.className = "erc-random-header-text";
+    buttonText.textContent = "Random Anime";
+    buttonText.style.cssText = "margin-left:8px; font-size:14px;";
+
+    buttonDiv.appendChild(buttonIcon);
+    randomButton.appendChild(buttonDiv);
+    randomButton.appendChild(buttonText);
+    actionWrapper.appendChild(randomButton);
+
+    try {
+      if (
+        insertBeforeNode &&
+        insertBeforeNode.parentElement === actionsContainer
+      ) {
+        actionsContainer.insertBefore(actionWrapper, insertBeforeNode);
+      } else {
+        actionsContainer.appendChild(actionWrapper);
+      }
+    } catch (e) {
+      // defensive fallback
+      actionsContainer.appendChild(actionWrapper);
+    }
+  }
+
+  const observer = new MutationObserver((mutations, obs) => {
+    if (document.body) {
+      createRandomAnimeButton();
+    }
+  });
+
+  observer.observe(document.documentElement || document.body, {
+    childList: true,
+    subtree: true,
+  });
 })();
