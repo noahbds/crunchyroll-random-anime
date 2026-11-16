@@ -1,0 +1,47 @@
+.erc-random-header-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.erc-random-header-button .erc-header-svg {
+  display: flex;
+  align-items: center;
+}
+
+.erc-random-header-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.25s ease;
+}
+
+.erc-random-header-button:hover .erc-random-header-icon,
+.erc-random-header-button:focus-visible .erc-random-header-icon {
+  transform: rotate(-12deg) scale(1.08);
+}
+
+.erc-random-header-text {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.erc-random--no-label .erc-random-header-text {
+  display: none;
+}
+
+/* The header gets crowded on small screens: keep just the icon. */
+@media (max-width: 960px) {
+  .erc-random-header-text {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .erc-random-header-icon {
+    transition: none;
+  }
+}

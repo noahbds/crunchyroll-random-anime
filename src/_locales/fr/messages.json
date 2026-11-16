@@ -1,0 +1,10 @@
+{
+  "extName": { "message": "Crunchyroll Random Anime" },
+  "extDescription": { "message": "Ajoute un bouton « Anime aléatoire » dans l'en-tête de Crunchyroll, avec une popup et un raccourci clavier." },
+  "buttonLabel": { "message": "Anime aléatoire" },
+  "commandDescription": { "message": "Ouvrir un anime aléatoire sur Crunchyroll" },
+  "popupRandomButton": { "message": "Surprends-moi" },
+  "popupShortcut": { "message": "Raccourci :" },
+  "settingShowLabel": { "message": "Afficher le texte « Anime aléatoire » dans l'en-tête" },
+  "settingNewTab": { "message": "Ouvrir l'anime aléatoire dans un nouvel onglet" }
+}

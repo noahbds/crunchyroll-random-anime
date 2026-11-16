@@ -1,0 +1,10 @@
+{
+  "extName": { "message": "Crunchyroll Random Anime" },
+  "extDescription": { "message": "Adds a Random Anime button to Crunchyroll's header, plus a toolbar popup and keyboard shortcut." },
+  "buttonLabel": { "message": "Random Anime" },
+  "commandDescription": { "message": "Open a random anime on Crunchyroll" },
+  "popupRandomButton": { "message": "Surprise me" },
+  "popupShortcut": { "message": "Shortcut:" },
+  "settingShowLabel": { "message": "Show \"Random Anime\" text in the header" },
+  "settingNewTab": { "message": "Open random anime in a new tab" }
+}

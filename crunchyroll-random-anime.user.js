@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Crunchyroll Random Anime Button
 // @namespace    http://tampermonkey.net/
-// @version      1.3.0
+// @version      1.5.0
 // @description  Adds a "Random Anime" button to Crunchyroll's top navigation bar
 // @icon         https://github.com/noahbds/crunchyroll-random-anime/blob/main/icons/randomimg.png?raw=true
 // @author       Noahbds
@@ -15,96 +15,124 @@
 (function () {
   "use strict";
 
-  const iconUrl =
+  const ICON_URL =
     "https://github.com/noahbds/crunchyroll-random-anime/blob/main/icons/randomimg.png?raw=true";
+  const BUTTON_CLASS = "erc-random-header-button";
+  const FALLBACK_WRAPPER_CLASS = "nav-horizontal-layout__action-item--KZBne";
+  const LOCALES = new Set([
+    "ar", "ca", "de", "es", "es-es", "fr", "hi", "id", "it", "ja", "ko",
+    "ms", "pt-br", "pt-pt", "ru", "th", "tr", "vi", "zh-cn", "zh-hk", "zh-tw",
+  ]);
 
-  function createRandomAnimeButton() {
-    if (document.querySelector(".erc-random-header-button")) return;
-
-    const searchButton = document.querySelector(
-      'a.erc-search-header-button-old, a[aria-label="Search"]'
-    );
-
-    let actionsContainer = null;
-    let insertBeforeNode = null;
-
-    if (searchButton) {
-      const searchWrapper = searchButton.closest(
-        "div.nav-horizontal-layout__action-item--KZBne, div"
-      );
-      insertBeforeNode =
-        searchWrapper || searchButton.parentElement || searchButton;
-      actionsContainer = insertBeforeNode && insertBeforeNode.parentElement;
-    }
-
-    if (!actionsContainer) {
-      actionsContainer = document.querySelector(
-        "div.nav-horizontal-layout__actions, div.nav-horizontal-layout__action-items, header"
-      );
-    }
-
-    if (!actionsContainer) {
-      const anyAction = document.querySelector(
-        'a.erc-header-tile, div.erc-header-svg, a[role="button"][data-t="header-tile"]'
-      );
-      actionsContainer = anyAction && anyAction.parentElement;
-    }
-
-    if (!actionsContainer) return;
-
-    const actionWrapper = document.createElement("div");
-    actionWrapper.className = "nav-horizontal-layout__action-item--KZBne";
-
-    const randomButton = document.createElement("a");
-    randomButton.href =
-      "https://www.crunchyroll.com/fr/random/anime?random_ref=topbar";
-    randomButton.className =
-      "erc-header-tile state-icon-only erc-random-header-button";
-    randomButton.tabIndex = 0;
-    randomButton.setAttribute("data-t", "header-tile");
-    randomButton.setAttribute("aria-label", "Random Anime");
-
-    const buttonDiv = document.createElement("div");
-    buttonDiv.className = "erc-header-svg";
-
-    const buttonIcon = document.createElement("img");
-    buttonIcon.src = iconUrl;
-    buttonIcon.alt = "Random Anime";
-    buttonIcon.style.cssText =
-      "width: 24px; height: 24px; display: inline-block; vertical-align: middle;";
-
-    const buttonText = document.createElement("span");
-    buttonText.className = "erc-random-header-text";
-    buttonText.textContent = "Random Anime";
-    buttonText.style.cssText = "margin-left:8px; font-size:14px;";
-
-    buttonDiv.appendChild(buttonIcon);
-    randomButton.appendChild(buttonDiv);
-    randomButton.appendChild(buttonText);
-    actionWrapper.appendChild(randomButton);
-
-    try {
-      if (
-        insertBeforeNode &&
-        insertBeforeNode.parentElement === actionsContainer
-      ) {
-        actionsContainer.insertBefore(actionWrapper, insertBeforeNode);
-      } else {
-        actionsContainer.appendChild(actionWrapper);
-      }
-    } catch (e) {
-      actionsContainer.appendChild(actionWrapper);
-    }
+  function currentLocale() {
+    const m = /^\/([a-z]{2}(?:-[a-z]{2})?)(?=\/|$)/i.exec(location.pathname);
+    const locale = m && m[1].toLowerCase();
+    return locale && LOCALES.has(locale) ? locale : "";
   }
 
-  const observer = new MutationObserver((mutations, obs) => {
-    if (document.body) {
-      createRandomAnimeButton();
-    }
-  });
+  function randomUrl() {
+    const locale = currentLocale();
+    return `https://www.crunchyroll.com${locale ? "/" + locale : ""}/random/anime?random_ref=topbar`;
+  }
 
-  observer.observe(document.documentElement || document.body, {
-    childList: true,
-    subtree: true,
-  });
+  function label() {
+    return currentLocale() === "fr" ? "Anime aléatoire" : "Random Anime";
+  }
+
+  const style = document.createElement("style");
+  style.textContent = `
+    .${BUTTON_CLASS} { display:flex; align-items:center; gap:8px; text-decoration:none; }
+    .${BUTTON_CLASS} .erc-header-svg { display:flex; align-items:center; }
+    .erc-random-header-icon { display:block; width:24px; height:24px; transition:transform .25s ease; }
+    .${BUTTON_CLASS}:hover .erc-random-header-icon { transform:rotate(-12deg) scale(1.08); }
+    .erc-random-header-text { font-size:14px; font-weight:600; white-space:nowrap; }
+    @media (max-width: 960px) { .erc-random-header-text { display:none; } }
+  `;
+  (document.head || document.documentElement).appendChild(style);
+
+  let wrapper = null;
+
+  function findInsertionPoint() {
+    const search = document.querySelector(
+      'a.erc-search-header-button-old, a[data-t="header-tile"][href$="/search"]'
+    );
+    if (search) {
+      const item = search.closest('[class*="action-item"]') || search.parentElement;
+      if (item && item.parentElement) {
+        return { container: item.parentElement, before: item, template: item };
+      }
+    }
+    const actions = document.querySelector(
+      ".header-actions, div.nav-horizontal-layout__actions, div.nav-horizontal-layout__action-items"
+    );
+    return actions ? { container: actions, before: actions.firstElementChild, template: null } : null;
+  }
+
+  function createButton(template) {
+    const item = document.createElement("div");
+    item.className = template
+      ? [...template.classList].filter((c) => !c.includes("mobile-hidden")).join(" ")
+      : FALLBACK_WRAPPER_CLASS;
+
+    const link = document.createElement("a");
+    link.className = `erc-header-tile state-icon-only ${BUTTON_CLASS}`;
+    link.setAttribute("data-t", "header-tile");
+
+    const iconBox = document.createElement("div");
+    iconBox.className = "erc-header-svg";
+    const icon = document.createElement("img");
+    icon.src = ICON_URL;
+    icon.alt = "";
+    icon.width = 24;
+    icon.height = 24;
+    icon.className = "erc-random-header-icon";
+
+    const text = document.createElement("span");
+    text.className = "erc-random-header-text";
+
+    iconBox.appendChild(icon);
+    link.append(iconBox, text);
+    item.appendChild(link);
+    return item;
+  }
+
+  function ensureButton() {
+    if (!wrapper || !wrapper.isConnected) {
+      document.querySelectorAll(`.${BUTTON_CLASS}`).forEach((el) => {
+        (el.closest('[class*="action-item"]') || el).remove();
+      });
+      const point = findInsertionPoint();
+      if (!point) return;
+      wrapper = createButton(point.template);
+      point.container.insertBefore(wrapper, point.before || null);
+    }
+    const link = wrapper.querySelector(`.${BUTTON_CLASS}`);
+    const href = randomUrl();
+    if (link.href !== href) link.href = href;
+    const text = label();
+    link.setAttribute("aria-label", text);
+    link.title = text;
+    wrapper.querySelector(".erc-random-header-text").textContent = text;
+  }
+
+  let queued = false;
+  let lastPath = location.pathname;
+  function scheduleUpdate() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      ensureButton();
+    });
+  }
+
+  new MutationObserver(() => {
+    if (!wrapper || !wrapper.isConnected || location.pathname !== lastPath) {
+      lastPath = location.pathname;
+      scheduleUpdate();
+    }
+  }).observe(document.documentElement, { childList: true, subtree: true });
+
+  window.addEventListener("popstate", scheduleUpdate);
+  scheduleUpdate();
 })();

@@ -1,0 +1,62 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "short_name": "CR Random",
+  "version": "1.5.0",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "action": {
+    "default_title": "__MSG_extName__",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "open-random-anime": {
+      "suggested_key": {
+        "default": "Alt+Shift+R"
+      },
+      "description": "__MSG_commandDescription__"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.crunchyroll.com/*"
+      ],
+      "js": [
+        "common.js",
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/randomimg.png"
+      ],
+      "matches": [
+        "https://*.crunchyroll.com/*"
+      ]
+    }
+  ],
+  "minimum_chrome_version": "116"
+}
