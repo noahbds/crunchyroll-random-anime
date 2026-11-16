@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Store screenshot</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1280px; height: 800px; overflow: hidden; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    color: #f2f2f2;
+    background: radial-gradient(1200px 600px at 75% 20%, #3a1d08 0%, #141519 55%, #0b0b0d 100%);
+  }
+  .bar {
+    height: 64px; display: flex; align-items: center; justify-content: flex-end;
+    gap: 28px; padding: 0 40px; background: #0b0b0d; border-bottom: 1px solid #23252b;
+  }
+  .bar .ghost { height: 10px; border-radius: 5px; background: #2a2c33; }
+  .bar .left { margin-right: auto; display: flex; gap: 26px; }
+  .tile { display: flex; align-items: center; gap: 8px; color: #dadada; font-size: 15px; font-weight: 600; }
+  .tile svg { width: 24px; height: 24px; fill: none; stroke: #dadada; stroke-width: 2; }
+  .random {
+    position: relative; padding: 8px 14px; border-radius: 8px; color: #fff;
+    background: rgba(244,117,33,.14); outline: 2px solid #f47521;
+    box-shadow: 0 0 28px rgba(244,117,33,.55);
+  }
+  .random img { width: 24px; height: 24px; }
+  .callout {
+    position: absolute; top: 76px; right: 168px; color: #f47521; font-weight: 700; font-size: 15px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  main { display: flex; align-items: center; gap: 70px; padding: 70px 90px 0; }
+  .copy { flex: 1; }
+  h1 { font-size: 54px; line-height: 1.05; margin: 0 0 20px; letter-spacing: -0.02em; }
+  h1 span { color: #f47521; }
+  p.lead { font-size: 21px; line-height: 1.45; color: #b9b9b9; margin: 0 0 30px; max-width: 520px; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; font-size: 18px; }
+  li { display: flex; align-items: center; gap: 12px; }
+  li::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #f47521; flex: none; }
+  kbd { padding: 2px 8px; border: 1px solid #44464e; border-radius: 5px; font: 15px ui-monospace, monospace; background: #1d1f24; }
+
+  /* Replica of the extension popup (dark theme) */
+  .popup {
+    width: 340px; padding: 18px; border-radius: 12px; background: #141519;
+    border: 1px solid #2d2f36; box-shadow: 0 30px 80px rgba(0,0,0,.6); font-size: 14px;
+  }
+  .popup header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .popup h2 { margin: 0; font-size: 17px; }
+  .popup .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    padding: 12px; border-radius: 6px; background: #f47521; color: #000; font-weight: 700;
+    font-size: 15px; text-transform: uppercase; letter-spacing: .02em;
+  }
+  .popup .hint { text-align: center; color: #a0a0a0; font-size: 13px; margin: 8px 0 14px; }
+  .popup .hint kbd { font-size: 12px; padding: 1px 5px; }
+  .popup fieldset { border: 0; margin: 0; padding: 12px 0; border-top: 1px solid #2d2f36; border-bottom: 1px solid #2d2f36; display: grid; gap: 10px; }
+  .popup label { display: flex; gap: 9px; align-items: flex-start; }
+  .box { width: 15px; height: 15px; margin-top: 2px; border-radius: 3px; flex: none; border: 1.5px solid #6b6b6b; }
+  .box.on { background: #f47521; border-color: #f47521; position: relative; }
+  .box.on::after { content: ""; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid #000; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .popup footer { display: flex; justify-content: space-between; margin-top: 10px; color: #a0a0a0; font-size: 13px; }
+  .popup footer a { color: #f47521; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <div class="left">
+      <div class="ghost" style="width:70px"></div>
+      <div class="ghost" style="width:80px"></div>
+      <div class="ghost" style="width:76px"></div>
+      <div class="ghost" style="width:90px"></div>
+    </div>
+    <div class="tile random"><img src="../icons/randomimg.png" alt="" />Random Anime</div>
+    <div class="tile"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></div>
+  </div>
+  <div class="callout">▲ Added next to search</div>
+
+  <main>
+    <section class="copy">
+      <h1>Can't decide?<br /><span>Watch something random.</span></h1>
+      <p class="lead">One click on the new header button opens a random anime on Crunchyroll.</p>
+      <ul>
+        <li>Button built into the Crunchyroll header</li>
+        <li>Toolbar popup that works from any tab</li>
+        <li>Shortcut&nbsp;<kbd>Alt+Shift+R</kbd></li>
+        <li>Follows your Crunchyroll language</li>
+        <li>No tracking, no data collected</li>
+      </ul>
+    </section>
+
+    <div class="popup">
+      <header>
+        <img src="../icons/icon48.png" alt="" width="30" height="30" />
+        <h2>Crunchyroll Random Anime</h2>
+      </header>
+      <div class="btn"><img src="../icons/randomimg.png" alt="" width="20" height="20" />Surprise me</div>
+      <p class="hint">Shortcut: <kbd>Alt+Shift+R</kbd></p>
+      <fieldset>
+        <label><span class="box on"></span>Show "Random Anime" text in the header</label>
+        <label><span class="box"></span>Open random anime in a new tab</label>
+      </fieldset>
+      <footer><a>GitHub</a><span>v1.5.0</span></footer>
+    </div>
+  </main>
+</body>
+</html>

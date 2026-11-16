@@ -1,0 +1,19 @@
+Can't decide what to watch? Let Crunchyroll pick for you.
+
+Crunchyroll Random Anime adds a "Random Anime" button to the Crunchyroll header, right next to the search button. One click opens Crunchyroll's own random anime page, so you discover a new series instantly.
+
+FEATURES
+• Random Anime button built into the Crunchyroll navigation bar
+• Toolbar popup with a "Surprise me" button that works from any tab
+• Keyboard shortcut: Alt+Shift+R (customizable at chrome://extensions/shortcuts)
+• Follows your Crunchyroll language (French, German, Spanish, Portuguese, and more)
+• Options: icon-only button, open random anime in a new tab
+• English and French interface
+• Lightweight: no tracking, no analytics, no data collected
+
+HOW IT WORKS
+The extension only runs on crunchyroll.com. It adds the button to the page and links to Crunchyroll's official random anime page (crunchyroll.com/random/anime). Your settings are stored in your browser and never leave it.
+
+Open source: https://github.com/noahbds/crunchyroll-random-anime
+
+This extension is not affiliated with or endorsed by Crunchyroll.
