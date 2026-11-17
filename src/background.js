@@ -8,6 +8,6 @@ const { api, openRandom } = globalThis.CRRandom;
 
 api.commands.onCommand.addListener((command) => {
   if (command === "open-random-anime") {
-    openRandom("shortcut").catch((err) => console.error("[CR Random]", err));
+    openRandom().catch((err) => console.error("[CR Random]", err));
   }
 });

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "short_name": "CR Random",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "icons": {
@@ -58,5 +58,8 @@
       ]
     }
   ],
-  "minimum_chrome_version": "116"
+  "minimum_chrome_version": "116",
+  "host_permissions": [
+    "https://www.crunchyroll.com/*"
+  ]
 }

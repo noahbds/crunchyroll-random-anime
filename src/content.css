@@ -45,3 +45,13 @@
     transition: none;
   }
 }
+
+.erc-random--busy .erc-random-header-icon {
+  animation: erc-random-spin 0.6s linear infinite;
+}
+
+@keyframes erc-random-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,8 +1,16 @@
 (() => {
   "use strict";
 
-  const { api, localeFromPath, randomUrl, getSettings, setSettings, t } =
-    globalThis.CRRandom;
+  const {
+    api,
+    localeFromPath,
+    fallbackUrl,
+    randomSeriesUrl,
+    getSeriesList,
+    getSettings,
+    setSettings,
+    t,
+  } = globalThis.CRRandom;
 
   const BUTTON_CLASS = "erc-random-header-button";
   const NO_LABEL_CLASS = "erc-random--no-label";
@@ -82,24 +90,55 @@
     iconBox.append(icon);
     link.append(iconBox, text);
     item.append(link);
+
+    link.addEventListener("click", onActivate);
+    link.addEventListener("auxclick", onActivate);
+    // Warm the series cache as soon as the user shows intent.
+    link.addEventListener("pointerenter", warmCache, { once: true });
+    link.addEventListener("focus", warmCache, { once: true });
     return item;
   }
 
-  /** Syncs href/target/label with the current page and settings. */
+  function warmCache() {
+    getSeriesList().catch(() => {});
+  }
+
+  let busy = false;
+  async function onActivate(event) {
+    if (event.button > 1) return; // leave right-click alone
+    event.preventDefault();
+    if (busy) return;
+
+    const newTab =
+      settings.openInNewTab || event.button === 1 || event.ctrlKey || event.metaKey || event.shiftKey;
+    // Open the tab synchronously so popup blockers don't eat it.
+    const win = newTab ? window.open("about:blank", "_blank") : null;
+
+    busy = true;
+    wrapper?.classList.add("erc-random--busy");
+    try {
+      const url = await randomSeriesUrl(currentLocale() || settings.locale);
+      if (win) {
+        win.opener = null;
+        win.location.href = url;
+      } else if (newTab) {
+        window.open(url, "_blank", "noopener");
+      } else {
+        location.assign(url);
+      }
+    } finally {
+      busy = false;
+      wrapper?.classList.remove("erc-random--busy");
+    }
+  }
+
+  /** Syncs href/label with the current page and settings. */
   function applyState() {
     if (!wrapper) return;
     const link = wrapper.querySelector(`.${BUTTON_CLASS}`);
-    const href = randomUrl(currentLocale() || settings.locale);
+    // The real destination is picked on click; the href is only a fallback.
+    const href = fallbackUrl(currentLocale() || settings.locale);
     if (link.href !== href) link.href = href;
-
-    if (settings.openInNewTab) {
-      link.target = "_blank";
-      link.rel = "noopener";
-    } else {
-      link.removeAttribute("target");
-      link.removeAttribute("rel");
-    }
-
     wrapper.classList.toggle(NO_LABEL_CLASS, !settings.showLabel);
   }
 

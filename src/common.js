@@ -1,6 +1,10 @@
 /*
  * Shared helpers for the content script, popup and background worker.
  * Exposed as globalThis.CRRandom.
+ *
+ * Crunchyroll removed its /random/anime page, so we pick a series ourselves
+ * from Crunchyroll's public series sitemaps (one file per letter) and cache
+ * the list in extension storage.
  */
 (function (root) {
   "use strict";
@@ -8,6 +12,10 @@
   const api = root.browser ?? root.chrome;
 
   const ORIGIN = "https://www.crunchyroll.com";
+  const SITEMAP_INDEX = `${ORIGIN}/sitemap.xml`;
+  const CACHE_KEY = "seriesCache";
+  const CACHE_TTL_MS = 3 * 24 * 60 * 60 * 1000;
+  const FETCH_CONCURRENCY = 6;
 
   // Locale prefixes Crunchyroll uses in its URLs (English has no prefix).
   const LOCALES = new Set([
@@ -27,9 +35,17 @@
     return locale && LOCALES.has(locale) ? locale : "";
   }
 
-  function randomUrl(locale, ref = "topbar") {
-    const prefix = locale && LOCALES.has(locale) ? `/${locale}` : "";
-    return `${ORIGIN}${prefix}/random/anime?random_ref=${encodeURIComponent(ref)}`;
+  function localePrefix(locale) {
+    return locale && LOCALES.has(locale) ? `/${locale}` : "";
+  }
+
+  /** Where to go when the series list can't be loaded. */
+  function fallbackUrl(locale) {
+    return `${ORIGIN}${localePrefix(locale)}/videos/alphabetical`;
+  }
+
+  function seriesUrl(path, locale) {
+    return `${ORIGIN}${localePrefix(locale)}/series/${path}`;
   }
 
   function isCrunchyrollUrl(url) {
@@ -68,20 +84,102 @@
     }
   }
 
+  async function fetchText(url) {
+    const res = await fetch(url, { credentials: "include" });
+    if (!res.ok) throw new Error(`${res.status} ${url}`);
+    return res.text();
+  }
+
+  function locs(xml) {
+    return [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)].map((m) => m[1].replace(/&amp;/g, "&"));
+  }
+
+  /** Downloads every series sitemap and returns ["GRP58JGDR/c3", ...]. */
+  async function downloadSeriesList() {
+    const sitemaps = locs(await fetchText(SITEMAP_INDEX)).filter((u) =>
+      /\/sitemaps\/series\//.test(u)
+    );
+    if (!sitemaps.length) throw new Error("No series sitemaps found");
+
+    const series = new Set();
+    let next = 0;
+    async function worker() {
+      while (next < sitemaps.length) {
+        const url = sitemaps[next++];
+        try {
+          for (const loc of locs(await fetchText(url))) {
+            const m = /\/series\/([A-Z0-9]+\/[^/?#]*)/.exec(loc);
+            if (m) series.add(m[1]);
+          }
+        } catch (err) {
+          console.warn("[CR Random] sitemap failed:", url, err);
+        }
+      }
+    }
+    await Promise.all(Array.from({ length: FETCH_CONCURRENCY }, worker));
+    if (!series.size) throw new Error("Series list is empty");
+    return [...series];
+  }
+
+  let pending = null;
+
+  /** Returns the cached series list, refreshing it when stale. */
+  async function getSeriesList() {
+    let cache;
+    try {
+      cache = (await api.storage.local.get(CACHE_KEY))[CACHE_KEY];
+    } catch {
+      cache = null;
+    }
+    const fresh = cache?.series?.length && Date.now() - cache.time < CACHE_TTL_MS;
+    if (fresh) return cache.series;
+
+    pending ??= downloadSeriesList()
+      .then(async (series) => {
+        try {
+          await api.storage.local.set({ [CACHE_KEY]: { time: Date.now(), series } });
+        } catch {
+          // Not fatal: we'll just download again next time.
+        }
+        return series;
+      })
+      .finally(() => {
+        pending = null;
+      });
+
+    try {
+      return await pending;
+    } catch (err) {
+      // A stale list is better than nothing.
+      if (cache?.series?.length) return cache.series;
+      throw err;
+    }
+  }
+
+  /** Resolves to the URL of a random series, or the A–Z page on failure. */
+  async function randomSeriesUrl(locale) {
+    try {
+      const series = await getSeriesList();
+      const path = series[Math.floor(Math.random() * series.length)];
+      return seriesUrl(path, locale);
+    } catch (err) {
+      console.error("[CR Random] could not load the series list:", err);
+      return fallbackUrl(locale);
+    }
+  }
+
   /**
-   * Opens a random anime. Reuses the current tab when it is already on
-   * Crunchyroll, otherwise opens a new one. Only usable where the tabs API
-   * exists (popup, background).
+   * Opens a random anime from the popup or the keyboard shortcut. Reuses the
+   * current tab when it is already on Crunchyroll (unless "new tab" is on).
    */
-  async function openRandom(ref) {
+  async function openRandom() {
     const settings = await getSettings();
     const [tab] = await api.tabs.query({ active: true, currentWindow: true });
-    const locale =
-      (tab?.url && isCrunchyrollUrl(tab.url) && localeFromPath(new URL(tab.url).pathname)) ||
-      settings.locale;
-    const url = randomUrl(locale, ref);
+    const onCrunchyroll = Boolean(tab?.url && isCrunchyrollUrl(tab.url));
+    const locale = (onCrunchyroll && localeFromPath(new URL(tab.url).pathname)) || settings.locale;
+    const url = await randomSeriesUrl(locale);
 
-    if (tab?.id != null && tab.url && isCrunchyrollUrl(tab.url) && !settings.openInNewTab) {
+    if (onCrunchyroll && tab.id != null && !settings.openInNewTab) {
       await api.tabs.update(tab.id, { url });
     } else {
       await api.tabs.create({ url, index: tab ? tab.index + 1 : undefined });
@@ -92,7 +190,9 @@
     api,
     DEFAULTS,
     localeFromPath,
-    randomUrl,
+    fallbackUrl,
+    randomSeriesUrl,
+    getSeriesList,
     isCrunchyrollUrl,
     getSettings,
     setSettings,

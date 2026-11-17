@@ -31,7 +31,7 @@
   button.addEventListener("click", async () => {
     button.disabled = true;
     try {
-      await openRandom("extension_popup");
+      await openRandom();
       window.close();
     } catch (err) {
       console.error("[CR Random]", err);
